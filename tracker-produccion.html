@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Producción Editores — Don Juan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0f0f13;
+    --surface: #18181f;
+    --surface2: #21212b;
+    --border: #2a2a38;
+    --accent: #7c6fff;
+    --green: #43e097;
+    --yellow: #ffc83c;
+    --red: #ff6b6b;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --dim: #9898b0;
+    --thalia: #a78bfa;
+    --jairo: #34d399;
+    --diego: #fb923c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .logo span { color: var(--accent); }
+
+  .sync {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  .dot.loading {
+    background: transparent;
+    border: 2px solid var(--accent);
+    border-top-color: transparent;
+    border-radius: 50%;
+    width: 10px; height: 10px;
+    animation: spin 1s linear infinite;
+  }
+  .dot.error { background: var(--red); animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  @keyframes spin  { to { transform: rotate(360deg); } }
+
+  /* ── Nav tabs ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 16px 28px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 18px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    margin-bottom: -1px;
+  }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--dim); }
+
+  /* ── Main ── */
+  main { max-width: 1080px; margin: 0 auto; padding: 32px 28px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Selector de editor ── */
+  .editor-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .editor-btn {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+  }
+  .editor-btn:hover { border-color: var(--dim); }
+  .editor-btn.sel-thalia { border-color: var(--thalia); background: rgba(167,139,250,.08); }
+  .editor-btn.sel-jairo  { border-color: var(--jairo);  background: rgba(52,211,153,.08); }
+  .editor-btn.sel-diego  { border-color: var(--diego);  background: rgba(251,146,60,.08); }
+
+  .editor-btn .av {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .editor-btn .en {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  /* ── Form registro ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 28px;
+  }
+
+  .form-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 18px;
+    color: var(--dim);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    margin-bottom: 7px;
+  }
+
+  .field input, .field select, .field textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 13px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field select option { background: var(--surface2); }
+  .field textarea { resize: vertical; min-height: 64px; }
+
+  /* contador por tipo */
+  .tipo-counters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .counter-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .counter-label {
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .counter-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cnt-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+    line-height: 1;
+  }
+  .cnt-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .cnt-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .fecha-hoy {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .btn {
+    padding: 9px 22px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: .88; }
+  .btn-danger { background: rgba(255,107,107,.15); color: var(--red); }
+  .btn-danger:hover { background: rgba(255,107,107,.25); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* ── Registros del día ── */
+  .seccion-titulo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .registro-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .reg-editor-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .reg-info { flex: 1; }
+  .reg-titulo { font-weight: 500; font-size: 13px; }
+  .reg-meta   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .reg-tipos {
+    display: flex;
+    gap: 6px;
+  }
+
+  .tipo-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+  }
+  .tipo-reel   { background: rgba(124,111,255,.2); color: #a99fff; }
+  .tipo-diseno { background: rgba(251,146,60,.2);  color: #fb923c; }
+
+  .reg-fecha { font-size: 11px; color: var(--muted); }
+
+  /* ── Panel mensual ── */
+  .mes-nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .mes-nav button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 14px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    transition: border-color .2s;
+  }
+  .mes-nav button:hover { border-color: var(--accent); }
+
+  .mes-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  /* Stats por editor */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .stat-editor {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .stat-editor-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .stat-av {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .stat-nombre {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+
+  .stat-key { font-size: 12px; color: var(--muted); }
+
+  .stat-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+  }
+
+  .stat-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 12px 0;
+  }
+
+  .stat-promedio-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .stat-promedio-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .stat-promedio-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Calendario heatmap */
+  .cal-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 28px;
+  }
+
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .cal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .cal-editor-tabs {
+    display: flex;
+    gap: 6px;
+  }
+
+  .cal-tab {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: none;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .cal-tab.active { color: #fff; }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+
+  .cal-day-label {
+    font-size: 10px;
+    text-align: center;
+    color: var(--muted);
+    padding-bottom: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  .cal-cell {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 2px;
+    cursor: default;
+    transition: transform .1s;
+    position: relative;
+  }
+
+  .cal-cell:hover { transform: scale(1.05); z-index: 1; }
+
+  .cal-cell.empty { background: transparent; border-color: transparent; }
+  .cal-cell.today { border-color: var(--accent); }
+
+  .cal-date { font-size: 10px; color: var(--muted); line-height: 1; }
+  .cal-count {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  /* tabla detalle diario */
+  .tabla-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .tabla-header {
+    display: grid;
+    grid-template-columns: 90px 1fr 80px 80px 80px 80px 60px;
+    padding: 10px 18px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tabla-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 80px 80px 80px 80px 60px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    font-size: 13px;
+    transition: background .15s;
+  }
+  .tabla-row:last-child { border-bottom: none; }
+  .tabla-row:hover { background: var(--surface2); }
+
+  .tabla-fecha { color: var(--dim); font-size: 12px; }
+  .tabla-titulo { font-weight: 500; }
+  .tabla-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 56px 0;
+    color: var(--muted);
+  }
+  .empty-state p { margin-top: 10px; font-size: 13px; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all .3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 680px) {
+    .editor-selector { grid-template-columns: repeat(3, 1fr); }
+    .form-row { grid-template-columns: 1fr; }
+    .tipo-counters { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .tabla-header, .tabla-row { grid-template-columns: 70px 1fr 60px 60px 50px; }
+    .tabla-header > *:nth-child(5),
+    .tabla-header > *:nth-child(6),
+    .tabla-header > *:nth-child(7),
+    .tabla-row > *:nth-child(5),
+    .tabla-row > *:nth-child(6),
+    .tabla-row > *:nth-child(7) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Don Juan <span>/ Producción</span></div>
+  <div class="sync">
+    <div class="dot loading" id="syncDot"></div>
+    <span id="syncLabel">Cargando...</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-tab="registrar">📥 Registrar</button>
+  <button class="tab" data-tab="mensual">📊 Mensual</button>
+</div>
+
+<main>
+
+  <!-- ══ PANEL REGISTRAR ══ -->
+  <div class="panel active" id="panel-registrar">
+
+    <div class="seccion-titulo" style="margin-bottom:14px">¿Quién registra hoy?</div>
+    <div class="editor-selector" id="editorSelector"></div>
+
+    <div class="form-card" id="formCard" style="display:none">
+      <div class="form-title" id="formTitle">Registro de producción</div>
+
+      <div class="tipo-counters">
+        <div class="counter-card">
+          <div class="counter-label">
+            <span style="font-size:16px">🎬</span> Reels
+          </div>
+          <div class="counter-controls">
+            <button class="cnt-btn" onclick="cambiarCnt('reels', -1)">−</button>
+            <div class="cnt-value" id="cntReels">0</div>
+            <button class="cnt-btn" onclick="cambiarCnt('reels', 1)">+</button>
+          </div>
+        </div>
+        <div class="counter-card">
+          <div class="counter-label">
+            <span style="font-size:16px">🎨</span> Diseños
+          </div>
+          <div class="counter-controls">
+            <button class="cnt-btn" onclick="cambiarCnt('disenos', -1)">−</button>
+            <div class="cnt-value" id="cntDisenos">0</div>
+            <button class="cnt-btn" onclick="cambiarCnt('disenos', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label>Cliente</label>
+          <input type="text" id="inpCliente" placeholder="Ej: Cambio Soluciones">
+        </div>
+        <div class="field">
+          <label>Fecha</label>
+          <input type="date" id="inpFecha">
+        </div>
+        <div class="field">
+          <label>Nota (opcional)</label>
+          <input type="text" id="inpNota" placeholder="Ej: 3 reels minería">
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <span class="fecha-hoy" id="fechaHoyLabel"></span>
+        <button class="btn btn-primary" id="btnGuardar">Guardar registro</button>
+      </div>
+    </div>
+
+    <div id="registrosHoy"></div>
+
+  </div>
+
+  <!-- ══ PANEL MENSUAL ══ -->
+  <div class="panel" id="panel-mensual">
+
+    <div class="mes-nav">
+      <button id="btnMesAnt">← Anterior</button>
+      <div class="mes-label" id="mesLabel"></div>
+      <button id="btnMesSig">Siguiente →</button>
+    </div>
+
+    <div class="seccion-titulo">Producción del mes</div>
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="cal-wrap">
+      <div class="cal-header">
+        <div class="cal-title">Actividad diaria</div>
+        <div class="cal-editor-tabs" id="calTabs"></div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <div class="seccion-titulo">Detalle de registros</div>
+    <div class="tabla-wrap" id="tablaDetalle"></div>
+
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ── Config ─────────────────────────────────────────────
+const BIN_ID  = '6a308c8ef5f4af5e29f839d4';
+const API_KEY = '$2a$10$SCapsOZxNM8/xCglekrOT.3FTraC3n22b1hVrYpkMBf7rDQ1o5gEu';
+const BASE    = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+const HDRS    = { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY };
+
+const EDITORES = [
+  { id: 1, nombre: 'Thalia', color: '#a78bfa', bg: 'rgba(167,139,250,.15)', cls: 'sel-thalia' },
+  { id: 2, nombre: 'Jairo',  color: '#34d399', bg: 'rgba(52,211,153,.15)',  cls: 'sel-jairo'  },
+  { id: 3, nombre: 'Diego',  color: '#fb923c', bg: 'rgba(251,146,60,.15)',  cls: 'sel-diego'  },
+];
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+let data = { editores: EDITORES.map(e => ({id:e.id,nombre:e.nombre})), registros: [] };
+let editorSel  = null;
+let cntReels   = 0;
+let cntDisenos = 0;
+let mesVista   = new Date();
+mesVista.setDate(1);
+let calEditorSel = 1;
+
+// ── JSONBin ─────────────────────────────────────────────
+async function cargar() {
+  setSyncState('loading');
+  try {
+    const r = await fetch(`${BASE}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+    const d = await r.json();
+    // Si el bin tiene estructura vieja (tareas), reinicializa
+    if (d.record && Array.isArray(d.record.registros)) {
+      data = d.record;
+    } else {
+      data = { editores: EDITORES.map(e => ({id:e.id,nombre:e.nombre})), registros: [] };
+      await guardar();
+    }
+    setSyncState('ok');
+    renderAll();
+  } catch(e) {
+    setSyncState('error');
+    toast('Error al cargar datos');
+  }
+}
+
+async function guardar() {
+  setSyncState('loading');
+  try {
+    await fetch(BASE, { method: 'PUT', headers: HDRS, body: JSON.stringify(data) });
+    setSyncState('ok');
+  } catch(e) {
+    setSyncState('error');
+    toast('Error al guardar');
+  }
+}
+
+// ── Render global ───────────────────────────────────────
+function renderAll() {
+  renderEditorSelector();
+  renderRegistrosHoy();
+  renderMensual();
+}
+
+// ── Panel Registrar ─────────────────────────────────────
+function renderEditorSelector() {
+  const el = document.getElementById('editorSelector');
+  el.innerHTML = EDITORES.map(e => `
+    <div class="editor-btn ${editorSel === e.id ? e.cls : ''}" onclick="selEditor(${e.id})">
+      <div class="av" style="background:${e.bg};color:${e.color}">${e.nombre[0]}</div>
+      <div class="en">${e.nombre}</div>
+    </div>
+  `).join('');
+}
+
+window.selEditor = function(id) {
+  editorSel = id;
+  cntReels = 0; cntDisenos = 0;
+  document.getElementById('cntReels').textContent = 0;
+  document.getElementById('cntDisenos').textContent = 0;
+  document.getElementById('inpNota').value = '';
+  document.getElementById('inpCliente').value = '';
+
+  const hoy = fechaHoy();
+  document.getElementById('inpFecha').value = hoy;
+  document.getElementById('fechaHoyLabel').textContent = formatFecha(hoy);
+
+  const ed = EDITORES.find(e => e.id === id);
+  document.getElementById('formTitle').textContent = `Producción de ${ed.nombre}`;
+  document.getElementById('formCard').style.display = 'block';
+  renderEditorSelector();
+  renderRegistrosHoy();
+};
+
+window.cambiarCnt = function(tipo, delta) {
+  if (tipo === 'reels') {
+    cntReels = Math.max(0, cntReels + delta);
+    document.getElementById('cntReels').textContent = cntReels;
+  } else {
+    cntDisenos = Math.max(0, cntDisenos + delta);
+    document.getElementById('cntDisenos').textContent = cntDisenos;
+  }
+};
+
+document.getElementById('btnGuardar').addEventListener('click', async () => {
+  if (!editorSel) return;
+  if (cntReels === 0 && cntDisenos === 0) { toast('Suma al menos 1 reel o diseño'); return; }
+
+  const fecha   = document.getElementById('inpFecha').value || fechaHoy();
+  const cliente = document.getElementById('inpCliente').value.trim();
+  const nota    = document.getElementById('inpNota').value.trim();
+
+  const reg = {
+    id: Date.now().toString(),
+    editorId: editorSel,
+    fecha,
+    reels: cntReels,
+    disenos: cntDisenos,
+    cliente,
+    nota,
+    creadoEn: new Date().toISOString()
+  };
+
+  data.registros.push(reg);
+  cntReels = 0; cntDisenos = 0;
+  document.getElementById('cntReels').textContent = 0;
+  document.getElementById('cntDisenos').textContent = 0;
+  document.getElementById('inpCliente').value = '';
+  document.getElementById('inpNota').value = '';
+
+  renderAll();
+  await guardar();
+  toast('Registro guardado ✓');
+});
+
+function renderRegistrosHoy() {
+  const wrap = document.getElementById('registrosHoy');
+  const hoy  = fechaHoy();
+  const regs = data.registros
+    .filter(r => r.fecha === hoy)
+    .sort((a,b) => b.creadoEn.localeCompare(a.creadoEn));
+
+  if (!regs.length) {
+    wrap.innerHTML = `<div class="empty-state"><div style="font-size:26px">📋</div><p>Sin registros hoy todavía.</p></div>`;
+    return;
+  }
+
+  const titulo = `<div class="seccion-titulo">Registros de hoy — ${formatFecha(hoy)}</div>`;
+  const filas  = regs.map(r => {
+    const ed  = EDITORES.find(e => e.id === r.editorId) || {};
+    return `
+    <div class="registro-row">
+      <div class="reg-editor-dot" style="background:${ed.color || '#aaa'}"></div>
+      <div class="reg-info">
+        <div class="reg-titulo">${ed.nombre}${r.cliente ? ' · ' + r.cliente : ''}${r.nota ? ' — ' + r.nota : ''}</div>
+        <div class="reg-meta">${formatFecha(r.fecha)}</div>
+      </div>
+      <div class="reg-tipos">
+        ${r.reels   ? `<span class="tipo-tag tipo-reel">🎬 ${r.reels}</span>` : ''}
+        ${r.disenos ? `<span class="tipo-tag tipo-diseno">🎨 ${r.disenos}</span>` : ''}
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="eliminarReg('${r.id}')">✕</button>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML = titulo + filas;
+}
+
+window.eliminarReg = async function(id) {
+  data.registros = data.registros.filter(r => r.id !== id);
+  renderAll();
+  await guardar();
+  toast('Registro eliminado');
+};
+
+// ── Panel Mensual ───────────────────────────────────────
+function renderMensual() {
+  const y = mesVista.getFullYear();
+  const m = mesVista.getMonth();
+  document.getElementById('mesLabel').textContent = `${MESES[m]} ${y}`;
+
+  const regsMes = data.registros.filter(r => {
+    const d = new Date(r.fecha + 'T00:00:00');
+    return d.getFullYear() === y && d.getMonth() === m;
+  });
+
+  renderStats(regsMes, y, m);
+  renderCalendario(regsMes, y, m);
+  renderTabla(regsMes);
+}
+
+function renderStats(regs, y, m) {
+  // días hábiles del mes (lun-sáb)
+  const diasMes      = new Date(y, m+1, 0).getDate();
+  const hoy          = new Date();
+  const diasTotales  = (y === hoy.getFullYear() && m === hoy.getMonth())
+    ? hoy.getDate()
+    : diasMes;
+  // días con al menos 1 registro en el mes por editor
+  const grid = document.getElementById('statsGrid');
+  grid.innerHTML = EDITORES.map(ed => {
+    const rEd   = regs.filter(r => r.editorId === ed.id);
+    const totalReels   = rEd.reduce((s,r) => s + (r.reels||0), 0);
+    const totalDisenos = rEd.reduce((s,r) => s + (r.disenos||0), 0);
+    const totalPiezas  = totalReels + totalDisenos;
+    const diasConReg   = new Set(rEd.map(r=>r.fecha)).size;
+    const promedio     = diasConReg > 0 ? (totalPiezas / diasTotales).toFixed(1) : '0.0';
+
+    return `
+    <div class="stat-editor">
+      <div class="stat-editor-header">
+        <div class="stat-av" style="background:${ed.bg};color:${ed.color}">${ed.nombre[0]}</div>
+        <div class="stat-nombre">${ed.nombre}</div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">🎬 Reels</span>
+        <span class="stat-val" style="color:#a99fff">${totalReels}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">🎨 Diseños</span>
+        <span class="stat-val" style="color:#fb923c">${totalDisenos}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">Días activos</span>
+        <span class="stat-val" style="font-size:16px;color:var(--dim)">${diasConReg}</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-promedio-label">Promedio diario</div>
+      <div class="stat-promedio-val" style="color:${ed.color}">${promedio}</div>
+      <div class="stat-promedio-sub">piezas/día (sobre ${diasTotales} días)</div>
+    </div>`;
+  }).join('');
+}
+
+function renderCalendario(regsMes, y, m) {
+  // tabs de editor
+  const tabs = document.getElementById('calTabs');
+  tabs.innerHTML = EDITORES.map(ed => `
+    <button class="cal-tab ${calEditorSel === ed.id ? 'active' : ''}"
+            style="${calEditorSel === ed.id ? 'background:'+ed.color+';border-color:'+ed.color : ''}"
+            onclick="setCalEditor(${ed.id})">${ed.nombre}</button>
+  `).join('');
+
+  const grid     = document.getElementById('calGrid');
+  const diasMes  = new Date(y, m+1, 0).getDate();
+  const inicioWd = new Date(y, m, 1).getDay(); // 0=dom
+  const hoyStr   = fechaHoy();
+
+  // encabezados
+  let html = DIAS.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+
+  // celdas vacías al inicio
+  for (let i = 0; i < inicioWd; i++) html += `<div class="cal-cell empty"></div>`;
+
+  const edColor = (EDITORES.find(e => e.id === calEditorSel) || {}).color || '#7c6fff';
+
+  for (let d = 1; d <= diasMes; d++) {
+    const fStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const rDia = regsMes.filter(r => r.editorId === calEditorSel && r.fecha === fStr);
+    const total = rDia.reduce((s,r) => s + (r.reels||0) + (r.disenos||0), 0);
+    const isHoy = fStr === hoyStr;
+
+    const intensity = total === 0 ? 0 : Math.min(total / 6, 1);
+    const bg = total === 0
+      ? 'var(--surface2)'
+      : `${edColor}${Math.round(intensity * 80 + 20).toString(16).padStart(2,'0')}`;
+
+    html += `
+    <div class="cal-cell${isHoy ? ' today' : ''}" style="background:${bg}" title="${fStr}: ${total} pieza${total!==1?'s':''}">
+      <div class="cal-date" style="color:${total>0?'rgba(255,255,255,.5)':'var(--muted)'}">${d}</div>
+      ${total > 0 ? `<div class="cal-count" style="color:${edColor}">${total}</div>` : ''}
+    </div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+window.setCalEditor = function(id) {
+  calEditorSel = id;
+  const y = mesVista.getFullYear(), m = mesVista.getMonth();
+  const regs = data.registros.filter(r => {
+    const d = new Date(r.fecha + 'T00:00:00');
+    return d.getFullYear() === y && d.getMonth() === m;
+  });
+  renderCalendario(regs, y, m);
+};
+
+function renderTabla(regs) {
+  const wrap = document.getElementById('tablaDetalle');
+  if (!regs.length) {
+    wrap.innerHTML = `<div class="empty-state"><div style="font-size:26px">📊</div><p>Sin registros este mes.</p></div>`;
+    return;
+  }
+
+  const sorted = [...regs].sort((a,b) => b.fecha.localeCompare(a.fecha));
+
+  wrap.innerHTML = `
+    <div class="tabla-header">
+      <div>Fecha</div>
+      <div>Detalle</div>
+      <div style="text-align:center">Editor</div>
+      <div style="text-align:center">🎬 Reels</div>
+      <div style="text-align:center">🎨 Diseños</div>
+      <div style="text-align:center">Total</div>
+      <div></div>
+    </div>
+    ${sorted.map(r => {
+      const ed = EDITORES.find(e => e.id === r.editorId) || {};
+      const total = (r.reels||0) + (r.disenos||0);
+      return `
+      <div class="tabla-row">
+        <div class="tabla-fecha">${formatFecha(r.fecha)}</div>
+        <div class="tabla-titulo">${r.cliente || ''}${r.nota ? ' — '+r.nota : ''}</div>
+        <div style="text-align:center">
+          <span style="font-size:11px;font-weight:600;color:${ed.color||'#aaa'}">${ed.nombre||'—'}</span>
+        </div>
+        <div class="tabla-num" style="text-align:center;color:#a99fff">${r.reels||0}</div>
+        <div class="tabla-num" style="text-align:center;color:#fb923c">${r.disenos||0}</div>
+        <div class="tabla-num" style="text-align:center">${total}</div>
+        <div style="text-align:right">
+          <button class="btn btn-danger btn-sm" onclick="eliminarReg('${r.id}')">✕</button>
+        </div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+// ── Navegación mes ──────────────────────────────────────
+document.getElementById('btnMesAnt').addEventListener('click', () => {
+  mesVista.setMonth(mesVista.getMonth() - 1);
+  renderMensual();
+});
+document.getElementById('btnMesSig').addEventListener('click', () => {
+  mesVista.setMonth(mesVista.getMonth() + 1);
+  renderMensual();
+});
+
+// ── Tabs ────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'mensual') renderMensual();
+  });
+});
+
+// ── Helpers ─────────────────────────────────────────────
+function fechaHoy() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function formatFecha(f) {
+  if (!f) return '—';
+  const [y,m,d] = f.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function setSyncState(s) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'dot ' + (s==='loading'?'loading':s==='error'?'error':'');
+  lbl.textContent = s==='loading'?'Guardando...':s==='error'?'Error':'Sincronizado';
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── Init ─────────────────────────────────────────────────
+cargar();
+</script>
+</body>
+</html>
