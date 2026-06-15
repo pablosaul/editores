@@ -1,2 +1,2 @@
-# dise-adores
+# editores
 Gestión de seguimiento diseñadores
